@@ -27,23 +27,27 @@ var cheerio = require('cheerio');
 var rest = require('restler');
 var HTMLFILE_DEFAULT = "index.html";
 var CHECKSFILE_DEFAULT = "checks.json";
+var URLFILE_DEFAULT="http://google.com";
 
 var assertFileExists = function(infile) {
     var instr = infile.toString();
     if(!fs.existsSync(instr)) {
         console.log("%s does not exist. Exiting.", instr);
-        process.exit(1); // http://nodejs.org/api/process.html#process_process_exit_code
+        process.exit(1); // http://nodejs.org/api/process.html#process_process_exit_code        
     }
     return instr;
 };
 
-var assertUrlExists = function(infile) {
+var assertUrlExists = function(infile) {    
     var instr = infile.toString();
     rest.get(instr).on('complete', function(result) {
     if (result instanceof Error) {
         console.log("%s error fetching. Exiting.", instr);
         process.exit(1); // http://nodejs.org/api/process.html#process_process_exit_code
-      } else {
+      } else {      
+        program.file="download.txt" ;
+        fs.writeFileSync(program.file,result.toString());
+        var checkJson = checkHtmlFile(program.file, program.checks);
         return instr;
       }
     });    
@@ -78,7 +82,7 @@ if(require.main == module) {
     program
         .option('-c, --checks <check_file>', 'Path to checks.json', clone(assertFileExists), CHECKSFILE_DEFAULT)
         .option('-f, --file <html_file>', 'Path to index.html', clone(assertFileExists), HTMLFILE_DEFAULT)
-        .option('-u, --url <html_file>', 'Path to index.html', clone(assertUrlExists), HTMLFILE_DEFAULT)
+        .option('-u, --url <html_file>', 'Url Path to index.html', clone(assertUrlExists), URLFILE_DEFAULT)
         .parse(process.argv);
     var checkJson = checkHtmlFile(program.file, program.checks);
     var outJson = JSON.stringify(checkJson, null, 4);
